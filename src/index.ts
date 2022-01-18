@@ -59,6 +59,7 @@ class Game
     {
         var mouseVector = event.point.subtract(paper.view.center);
         this.ship!.rotation = mouseVector.angle + 90;
+        this.ship!.translate(new paper.Point(1,0));
     }
 
     private onMouseDown(event: paper.MouseEvent) : void
