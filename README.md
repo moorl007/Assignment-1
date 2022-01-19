@@ -9,9 +9,9 @@ This assignment involves creating a simple, fun game using 2D graphics. You will
 - Animate computer graphics based on user input
 - Implement game loops and event handlers
 
- In general, assignments in this class are intended to be implemented in a step-by-step manner.  The rubric below lists all of the features you should implement, starting with the basic functionality and then working up to more advanced features.
+In general, assignments in this class are intended to be implemented in a step-by-step manner.  The rubric below lists all of the features you should implement, starting with the basic functionality and then working up to more advanced features.
 
-You can try a [finished version of the game](https://csci-4611-spring-2022.github.io/Builds/Assignment-1/) in the Builds repository on the course GitHub.
+You can try a [finished version of the game](https://csci-4611-spring-2022.github.io/Builds/Assignment-1/) in the Builds repository on the course GitHub. This is only a representative example, and you do not need to make your game look or play exactly the same. Your program can have a different look and feel, so long as it satisfies the requirements specified in the rubric.
 
 ## Prerequisites
 
@@ -19,7 +19,7 @@ To work with this code, you will first need to install [Node.js](https://nodejs.
 
 ## Getting Started
 
-The code implements the general structure that we reviewed in lecture.  You set up the initial project by pulling the dependencies from the node package manager with:
+The starter code implements the general structure that we reviewed in lecture.  You set up the initial project by pulling the dependencies from the node package manager with:
 
 ```
 npm install
@@ -37,7 +37,13 @@ You can run the program by pointing your web browser at `http://localhost:8080`.
 
 Graded out of 100 points.
 
-TBA.
+The starter code includes a ship that rotate to point towards the mouse cursor.  First, we are going to make the ship move.  However, we want the ship to always be at the center of the screen.  Instead of moving the ship, we are going to create a bunch of stars that move in the opposite direction, thereby creating the *illusion* of movement. 
+
+1. To achieve this, you should first create a bunch of small circles of varying sizes and place them at random locations within the visible window. 
+2. Next, move the stars by a small amount each frame to make the ship appear to move forward.
+3. Make the velocity of each star dependent on its size. Smaller stars should appear to move slower than closer stars. This depth effect is known as [parallax](https://en.wikipedia.org/wiki/Parallax).
+
+
 
 ## Wizards
 
