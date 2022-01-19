@@ -51,7 +51,7 @@ The starter code includes a ship that rotate to point towards the mouse cursor. 
 
 1. To achieve this, you should first create a bunch of small white stars of varying sizes and place them at random locations within the visible window.  Instead of creating a large number of `Path.Circle` objects, you should create only one circle, and then place multiple instances throughout the scene using a `Symbol`, as shown in this [tutorial](http://paperjs.org/tutorials/project-items/working-with-symbols/).  (1)
 2. Next, move the stars by a small amount each frame to make the ship appear to move forward.  The velocity should increase proportional to the distance between the center of the view and the mouse cursor.  (2)
-3. When a star goes outside the visible area of the screen, move it back the other side of the screen.  For example, if the `position.x` position of the star is greater than the view width, then then set the star's `position.x` to 0.  This should create the effect of an infinite moving starfield in every direction the ship can fly.  (2)
+3. When a star goes outside the visible area of the screen, move it back the other side of the screen.  For example, if the `position.x` of the star is greater than the view width, then then set the `position.x` to 0.  This should create the effect of an infinite moving starfield in every direction the ship can fly.  (2)
 4. Make the velocity of each star dependent on its size. Smaller stars should appear to move slower than bigger stars. This depth effect is known as [parallax](https://en.wikipedia.org/wiki/Parallax).  (1)
 
 In the next steps, you will import a new vector graphics file, place a series of mines in the scene, and then animate them.
