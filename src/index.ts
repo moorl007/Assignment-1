@@ -87,6 +87,7 @@ class Game
         var mouseVector = event.point.subtract(paper.view.center);
 
         // Point the ship towards the mouse cursor by converting the vector to an angle
+        // This only works if applyMatrix is set to false
         this.ship!.rotation = mouseVector.angle + 90;
     }
 
