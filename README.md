@@ -17,7 +17,7 @@ You can try a [finished version of the game](https://csci-4611-spring-2022.githu
 
 You should fill out this information before submitting your assignment. Make sure to document the name and source of any third party assets that you added, such as models, images, sounds, or any other content used that was not solely written by you. 
 
-Name:
+Name: Ben Moorlach
 
 Third Party Assets:
 

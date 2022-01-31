@@ -21,6 +21,11 @@ class Game
     private mineSymbols : paper.SymbolItem[];
     private score : number;
     private gameOver : boolean;
+    private gameOverScreen : paper.Group;
+    private gameOverSymbol : paper.SymbolItem;
+
+    private pointTxt : paper.PointText; 
+    private pointGame : paper.PointText;
 
 
     private explosionNode : paper.Group | undefined;
@@ -34,8 +39,6 @@ class Game
     // This can be prevented by including undefined as a second possible type
     private ship : paper.Group | undefined;
     private mine : paper.Group | undefined;
-    // private star : paper.Path.Star;  //background
-    // private dot  : paper.Path.Circle; //background
     
     constructor()
     {
@@ -77,17 +80,54 @@ class Game
 
         this.laserNode.addChild(laser);
 
-        // this.velocity = new paper.Point(0,0);
+        this.gameOverScreen = new paper.Group();
 
-        // this.star = new paper.Path.Star(new paper.Point(100,100), 5, 4, 10);
-        // this.star.strokeWidth = 2;
-        // this.star.fillColor = new paper.Color('gold');
-        // // this.star.opacity = .5;
-        // this.star.visible = false;
+        var blackScreen = new paper.Rectangle(new paper.Point(0,0), new paper.Size(1200,800));
+        // var restart = new paper.Rectangle(new paper.Point(450,525), new paper.Size(300,150));
+        // var restartPath = new paper.Path.Rectangle(restart);
+        var blackScreenPath = new paper.Path.Rectangle(blackScreen);
+        var gameOverText = new paper.PointText(new paper.Point(480,200));
+        gameOverText.fontFamily = 'Impact';
+        gameOverText.fontSize = 50;
+        gameOverText.fillColor = new paper.Color('red');
+        gameOverText.content = 'GAME OVER'
 
-        // this.dot = new paper.Path.Circle(new paper.Point(this.width/2, this.height/2), 2);
-        // this.dot.fillColor = new paper.Color('white');
-        // this.dot.visible = false;
+        var line2 = new paper.PointText(new paper.Point(480,500));
+        line2.fontFamily = 'Courier';
+        line2.fontSize = 15;
+        line2.fillColor = new paper.Color('white');
+        line2.content = 'click anywhere to restart';
+
+        var line3 = new paper.PointText(new paper.Point(480,350));
+        line3.fontFamily = 'Courier';
+        line3.fontSize = 35;
+        line3.fillColor = new paper.Color('white');
+        line3.content = 'Points:';
+
+        // restartPath.fillColor = new paper.Color('white');
+        blackScreenPath.fillColor = new paper.Color('black');
+        
+        
+        this.gameOverScreen.addChild(blackScreenPath);
+        //this.gameOverScreen.addChild(restartPath);
+        this.gameOverScreen.addChild(gameOverText);
+        this.gameOverScreen.addChild(line2);
+        this.gameOverScreen.addChild(line3);
+        var dummy = new paper.SymbolDefinition(this.gameOverScreen);
+        this.gameOverSymbol = dummy.place(new paper.Point(600,400));
+        this.gameOverSymbol.visible = false;
+        this.pointTxt = new paper.PointText(new paper.Point(650,350));
+        this.pointTxt.fontFamily = 'Courier';
+        this.pointTxt.fontSize = 35;
+        this.pointTxt.fillColor = new paper.Color('white');
+        this.pointTxt.visible = false;
+        this.pointGame = new paper.PointText(new paper.Point(1120,80));
+        this.pointGame.fontFamily = 'Courier';
+        this.pointGame.fontSize = 35;
+        this.pointGame.fillColor = new paper.Color('white');
+        this.pointGame.visible = true;
+        this.pointGame.content = this.score.toString();
+
     }
 
     start() : void 
@@ -160,9 +200,6 @@ class Game
         var bigStarSymbols : paper.SymbolItem[] = [];
         var medStarSymbols : paper.SymbolItem[] = [];
         var smallStarSymbols : paper.SymbolItem[] = [];
-        // var mineSymbols : paper.SymbolItem[] = [];
-
-        // explosionSymbol.place(new paper.Point(0, 100));
 
         for (let i = 0; i < 25;i++){
             //10 big
@@ -194,103 +231,124 @@ class Game
     // This method will be called once per frame
     private update(event: GameEvent) : void
     {
-        // Add code here
-        var mineSymbol = new paper.SymbolDefinition(this.mine!);
-        var explosionsymbol = new paper.SymbolDefinition(this.explosionNode!);
+        if(!this.gameOver){
+            this.pointGame.content = this.score.toString();
+            this.ship!.visible = true;
+            if(this.gameOverSymbol.visible){
+                this.pointGame.visible = true;
+                this.gameOverSymbol.visible = false;
+                this.pointTxt.visible = false;
+            }
+            // Add code here
+            var mineSymbol = new paper.SymbolDefinition(this.mine!);
+            var explosionsymbol = new paper.SymbolDefinition(this.explosionNode!);
 
-        //do laser movement
-        for(var i = 0; i<this.laserSymbols.length; i++){
+            //do laser movement
+            for(var i = 0; i<this.laserSymbols.length; i++){
 
-            //remove if laser is out of the window
-            if(this.laserSymbols[i].position.x>1450 || this.laserSymbols[i].position.x<-150 || this.laserSymbols[i].position.y>950 || this.laserSymbols[i].position.y<-150){
-                this.laserSymbols[i].visible = false;
-                console.log("it should disappear");
-                this.laserSymbols.splice(i,1);
-                this.laserVelocities.splice(i,1);
-                break;      
+                //remove if laser is out of the window
+                if(this.laserSymbols[i].position.x>1450 || this.laserSymbols[i].position.x<-150 || this.laserSymbols[i].position.y>950 || this.laserSymbols[i].position.y<-150){
+                    this.laserSymbols[i].visible = false;
+                    console.log("it should disappear");
+                    this.laserSymbols.splice(i,1);
+                    this.laserVelocities.splice(i,1);
+                    break;      
+                }
+
+                this.laserSymbols[i].translate(this.laserVelocities[i].multiply(20));
+                this.laserSymbols[i].translate(this.velocity!.multiply(-event.delta).multiply(1.1))
             }
 
-            this.laserSymbols[i].translate(this.laserVelocities[i].multiply(20));
-            this.laserSymbols[i].translate(this.velocity!.multiply(-event.delta).multiply(1.1))
-        }
+            //expand explosions and remove if they get too big
+            for(var i = 0; i<this.explosions.length; i++){
+                // console.log(this.explosions.length);
+                this.explosions[i].scaling.length += 0.4;
+                this.explosions[i].translate(this.velocity!.multiply(-event.delta).multiply(1.1));
 
-        //expand explosions and remove if they get too big
-        for(var i = 0; i<this.explosions.length; i++){
-            // console.log(this.explosions.length);
-            this.explosions[i].scaling.length += 0.4;
-            this.explosions[i].translate(this.velocity!.multiply(-event.delta).multiply(1.1));
-
-            if(this.explosions[i].scaling.length > 4){
-                //remove the explosion from the screen and the arrya
-                this.explosions[i].visible = false;
-                this.explosions.splice(i,1);
-            }
-        }
-
- 
-        //add mine every 0.5 seconds
-        if(event.time > this.secCounter + 0.5){   
-            var location = randomInt(4);
-            this.secCounter = event.time;
-            // console.log(this.secCounter);
-
-            if(location == 0){
-                //add to top of screen
-                this.mineSymbols.push(mineSymbol.place(new paper.Point(random(1200),-10)));
-                console.log("top of screen");
-            }else if(location ==1 ){
-                //add to right of screen
-                this.mineSymbols.push(mineSymbol.place(new paper.Point(1220,random(800))));
-                console.log("right of screen");
-
-            }else if(location == 2){
-                //add to bottom of screen
-                this.mineSymbols.push(mineSymbol.place(new paper.Point(random(1200),810)));
-                console.log("bottom of screen");
-
-            }else if(location == 3){
-                //add to left of screen
-                this.mineSymbols.push(mineSymbol.place(new paper.Point(-20,random(800))));
-                console.log("left of screen");
-
-            }
-            console.log(this.mineSymbols.length);
-            if(this.mineSymbols.length > 25){
-                //remove the first mine in the array
-                // delete this.mineSymbols[0];
-                this.mineSymbols[0].visible = false;
-                // this.mineSymbols = this.mineSymbols.splice(1,25);
-                this.mineSymbols.splice(0,1);
-                console.log("deleted mine");
+                if(this.explosions[i].scaling.length > 4){
+                    //remove the explosion from the screen and the arrya
+                    this.explosions[i].visible = false;
+                    this.explosions.splice(i,1);
+                }
             }
 
+    
+            //add mine every 0.5 seconds
+            if(event.time > this.secCounter + 0.5){   
+                var location = randomInt(4);
+                this.secCounter = event.time;
+                // console.log(this.secCounter);
 
-            
-        }
+                if(location == 0){
+                    //add to top of screen
+                    this.mineSymbols.push(mineSymbol.place(new paper.Point(random(1200),-10)));
+                    console.log("top of screen");
+                }else if(location ==1 ){
+                    //add to right of screen
+                    this.mineSymbols.push(mineSymbol.place(new paper.Point(1220,random(800))));
+                    console.log("right of screen");
 
-        //move stars based on mouse movement
-        this.bigStarNode.translate(this.velocity!.multiply(-event.delta));
-        this.medStarNode.translate(this.velocity!.multiply(-event.delta).multiply(0.25));
-        this.smallStarNode.translate(this.velocity!.multiply(-event.delta).multiply(0.1));
+                }else if(location == 2){
+                    //add to bottom of screen
+                    this.mineSymbols.push(mineSymbol.place(new paper.Point(random(1200),810)));
+                    console.log("bottom of screen");
 
-        //mvoe mines towards ship, 
-        for(var i = 0; i<this.mineSymbols.length; i++){
-            this.mineSymbols[i].translate((this.mineSymbols[i].position.subtract(this.ship!.position)).divide(-this.mineSymbols[i].position.subtract(this.ship!.position).length));
-            this.mineSymbols[i].rotate(1);
-            this.mineSymbols[i].translate(this.velocity!.multiply(-event.delta).multiply(1.1));
-        }
+                }else if(location == 3){
+                    //add to left of screen
+                    this.mineSymbols.push(mineSymbol.place(new paper.Point(-20,random(800))));
+                    console.log("left of screen");
 
-        //destray mines if they get too close to each other
-        for(var i = 0 ; i<(this.mineSymbols.length-1) ; i++){
-            for (var t = 0; t<this.laserSymbols.length; t++){
-                if(i == this.mineSymbols.length-2){
-                    var distance = this.laserSymbols[t].position.subtract(this.mineSymbols[i+1].position).length;
-                    if(distance < 30){
+                }
+                console.log(this.mineSymbols.length);
+                if(this.mineSymbols.length > 25){
+                    //remove the first mine in the array
+                    // delete this.mineSymbols[0];
+                    this.mineSymbols[0].visible = false;
+                    // this.mineSymbols = this.mineSymbols.splice(1,25);
+                    this.mineSymbols.splice(0,1);
+                    console.log("deleted mine");
+                }
+
+
+                
+            }
+
+            //move stars based on mouse movement
+            this.bigStarNode.translate(this.velocity!.multiply(-event.delta));
+            this.medStarNode.translate(this.velocity!.multiply(-event.delta).multiply(0.25));
+            this.smallStarNode.translate(this.velocity!.multiply(-event.delta).multiply(0.1));
+
+            //mvoe mines towards ship, 
+            for(var i = 0; i<this.mineSymbols.length; i++){
+                this.mineSymbols[i].translate((this.mineSymbols[i].position.subtract(this.ship!.position)).divide(-this.mineSymbols[i].position.subtract(this.ship!.position).length));
+                this.mineSymbols[i].rotate(1);
+                this.mineSymbols[i].translate(this.velocity!.multiply(-event.delta).multiply(1.1));
+            }
+
+            for(var i = 0; i<(this.mineSymbols.length); i++){
+                var toShip = this.mineSymbols[i].position.subtract(this.ship!.position).length;
+                if(toShip<30){
+                    this.gameOver = true;
+                    this.mineSymbols[i].visible = false;
+
+                    // create explosion
+                    this.explosions.push(explosionsymbol.place(this.mineSymbols[i].position));
+                    this.explosions[this.explosions.length-1].applyMatrix = false;
+                    this.explosions[this.explosions.length-1].scaling.length = 1;
+
+                    this.mineSymbols.splice(i, 1);
+                    break;
+
+                }
+                for(var t = 0; t<this.laserSymbols.length; t++){
+                    var distance = this.laserSymbols[t].position.subtract(this.mineSymbols[i].position).length;
+                    if(distance<30){
                         this.score++;
-                        this.mineSymbols[i+1].visible = false;
+                        console.log(this.score);
+                        this.mineSymbols[i].visible = false;
 
                         // create explosion
-                        this.explosions.push(explosionsymbol.place(this.mineSymbols[i+1].position));
+                        this.explosions.push(explosionsymbol.place(this.mineSymbols[i].position));
                         this.explosions[this.explosions.length-1].applyMatrix = false;
                         this.explosions[this.explosions.length-1].scaling.length = 1;
 
@@ -298,107 +356,117 @@ class Game
                         this.laserSymbols.splice(t,1);
                         this.laserVelocities.splice(t,1);
 
-                        this.mineSymbols.splice(i+1, 1);
+                        this.mineSymbols.splice(i, 1);
                         break;
+                    }
+                }
+            }
+            
+
+
+            //destray mines if they get too close to each other
+            for(var i = 0 ; i<(this.mineSymbols.length-1) ; i++){
+                console.log(this.score);
+                for(var j = i+1; j<this.mineSymbols.length; j++){
+                    var distance = this.mineSymbols[i].position.subtract(this.mineSymbols[j].position).length;
+                    if(distance < 0){
+                        distance = -distance;
+                    }
+                    if(distance < 44){
+                        //remove the mines
+                        this.mineSymbols[i].visible = false;
+                        this.mineSymbols[j].visible = false;
+                        // create explosion
+                        this.explosions.push(explosionsymbol.place(this.mineSymbols[i].position));
+                        this.explosions[this.explosions.length-1].applyMatrix = false;
+                        this.explosions[this.explosions.length-1].scaling.length = 1;
+                        this.explosions.push(explosionsymbol.place(this.mineSymbols[j].position));
+                        this.explosions[this.explosions.length-1].applyMatrix = false;
+                        this.explosions[this.explosions.length-1].scaling.length = 1;
+
+                        this.mineSymbols.splice(j, 1);
+                        this.mineSymbols.splice(i, 1);
+                        break;
+                    }
+                }
+            }
+
+            //game over if a mine hits the ship
+
+            //expand any explosions and remove them once they get too big
+
+
+            
+            //make stars pull a pac-man if they go off screen
+            for(var i = 0; i<25; i++){
+                if(i<10){
+                    if (this.bigStarNode.children[i].position.x<0){
+                        this.bigStarNode.children[i].position.x = 1220;
+                    }
+                    if (this.bigStarNode.children[i].position.x>1220){
+                        this.bigStarNode.children[i].position.x = 0;
+                    }
+                    if (this.bigStarNode.children[i].position.y<0){
+                        this.bigStarNode.children[i].position.y = 800;
+                    }
+                    if (this.bigStarNode.children[i].position.y>800){
+                        this.bigStarNode.children[i].position.y = 0;
                     }
 
                 }
-                this.score++;
-                var distance = this.laserSymbols[t].position.subtract(this.mineSymbols[i].position).length;
-                if(distance < 30){
-                    this.mineSymbols[i].visible = false;
-
-                    // create explosion
-                    this.explosions.push(explosionsymbol.place(this.mineSymbols[i].position));
-                    this.explosions[this.explosions.length-1].applyMatrix = false;
-                    this.explosions[this.explosions.length-1].scaling.length = 1;
-
-                    this.laserSymbols[t].visible = false;
-                    this.laserSymbols.splice(t,1);
-                    this.laserVelocities.splice(t,1);
-
-                    this.mineSymbols.splice(i, 1);
-                    break;
+                if(i<15){
+                    //test
+                    if (this.medStarNode.children[i].position.x<0){
+                        this.medStarNode.children[i].position.x = 1220;
+                    }
+                    if (this.medStarNode.children[i].position.x>1220){
+                        this.medStarNode.children[i].position.x = 0;
+                    }
+                    if (this.medStarNode.children[i].position.y<0){
+                        this.medStarNode.children[i].position.y = 800;
+                    }
+                    if (this.medStarNode.children[i].position.y>800){
+                        this.medStarNode.children[i].position.y = 0;
+                    }
                 }
 
+                if (this.smallStarNode.children[i].position.x<0){
+                    this.smallStarNode.children[i].position.x = 1220;
+                }
+                if (this.smallStarNode.children[i].position.x>1220){
+                    this.smallStarNode.children[i].position.x = 0;
+                }
+                if (this.smallStarNode.children[i].position.y<0){
+                    this.smallStarNode.children[i].position.y = 800;
+                }
+                if (this.smallStarNode.children[i].position.y>800){
+                    this.smallStarNode.children[i].position.y = 0;
+                }
+                
             }
-            console.log(this.score);
-            for(var j = i+1; j<this.mineSymbols.length; j++){
-                var distance = this.mineSymbols[i].position.subtract(this.mineSymbols[j].position).length;
-                if(distance < 0){
-                    distance = -distance;
-                }
-                if(distance < 44){
-                    //remove the mines
-                    this.mineSymbols[i].visible = false;
-                    this.mineSymbols[j].visible = false;
-                    // create explosion
-                    this.explosions.push(explosionsymbol.place(this.mineSymbols[i].position));
-                    this.explosions[this.explosions.length-1].applyMatrix = false;
-                    this.explosions[this.explosions.length-1].scaling.length = 1;
-                    this.explosions.push(explosionsymbol.place(this.mineSymbols[j].position));
-                    this.explosions[this.explosions.length-1].applyMatrix = false;
-                    this.explosions[this.explosions.length-1].scaling.length = 1;
-
-                    this.mineSymbols.splice(j, 1);
-                    this.mineSymbols.splice(i, 1);
-                    break;
-                }
-            }
-        }
-
-        //game over if a mine hits the ship
-
-        //expand any explosions and remove them once they get too big
-
-
-        
-        //make stars pull a pac-man if they go off screen
-        for(var i = 0; i<25; i++){
-            if(i<10){
-                if (this.bigStarNode.children[i].position.x<0){
-                    this.bigStarNode.children[i].position.x = 1220;
-                }
-                if (this.bigStarNode.children[i].position.x>1220){
-                    this.bigStarNode.children[i].position.x = 0;
-                }
-                if (this.bigStarNode.children[i].position.y<0){
-                    this.bigStarNode.children[i].position.y = 800;
-                }
-                if (this.bigStarNode.children[i].position.y>800){
-                    this.bigStarNode.children[i].position.y = 0;
-                }
-
-            }
-            if(i<15){
-                //test
-                if (this.medStarNode.children[i].position.x<0){
-                    this.medStarNode.children[i].position.x = 1220;
-                }
-                if (this.medStarNode.children[i].position.x>1220){
-                    this.medStarNode.children[i].position.x = 0;
-                }
-                if (this.medStarNode.children[i].position.y<0){
-                    this.medStarNode.children[i].position.y = 800;
-                }
-                if (this.medStarNode.children[i].position.y>800){
-                    this.medStarNode.children[i].position.y = 0;
-                }
-            }
-
-            if (this.smallStarNode.children[i].position.x<0){
-                this.smallStarNode.children[i].position.x = 1220;
-            }
-            if (this.smallStarNode.children[i].position.x>1220){
-                this.smallStarNode.children[i].position.x = 0;
-            }
-            if (this.smallStarNode.children[i].position.y<0){
-                this.smallStarNode.children[i].position.y = 800;
-            }
-            if (this.smallStarNode.children[i].position.y>800){
-                this.smallStarNode.children[i].position.y = 0;
-            }
+        }else{
+            this.ship!.visible = false;
             
+            if(!this.gameOverSymbol.visible){
+                this.pointGame.visible = false;
+                this.pointTxt.content = this.score.toString();
+                this.gameOverSymbol.visible = true;
+                this.pointTxt.visible = true;
+            }
+
+            for(var i = 0; i<this.mineSymbols.length; i++){
+                this.mineSymbols[i].visible = false;
+            }
+            for(var i = 0; i<this.explosions.length; i++){
+                this.explosions[i].visible = false;
+            }
+
+            for(var i = 0; i<this.laserSymbols.length; i++){
+                this.laserSymbols[i].visible = false;
+            }
+            this.mineSymbols = [];
+            this.explosions = [];
+            this.score = 0;
         }
     }
 
@@ -441,6 +509,10 @@ class Game
         this.laserSymbols.push(laserSymbol.place(this.ship!.position));
         this.laserSymbols[this.laserSymbols.length-1].rotation = this.velocity!.angle;
         this.laserVelocities.push(new paper.Point(this.velocity!).divide(this.velocity!.length));
+        if(this.gameOver){
+            this.gameOver = false;
+            //this.createScene();
+        }
     } 
 }
 
