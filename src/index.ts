@@ -3,16 +3,22 @@
  * Instructor: Evan Suma Rosenberg <suma@umn.edu>
  * License: Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
  */ 
-
+​
 import * as paper from 'paper';
+<<<<<<< HEAD
 import {random, randomInt} from 'mathjs';
 
+=======
+import { Group, Path, Point, SymbolDefinition, SymbolItem, view, View } from 'paper/dist/paper-core';
+​
+>>>>>>> aa985bb0ba9c97b2c8b7839edade5aebf7eeb0ec
 class Game 
 {
     // Width and height are defined in project coordinates
     // This is different than screen coordinates!
     private width : number;
     private height : number;
+<<<<<<< HEAD
     private bigStarNode : paper.Group;
     private medStarNode : paper.Group;
     private smallStarNode : paper.Group;
@@ -39,6 +45,19 @@ class Game
     // This can be prevented by including undefined as a second possible type
     private ship : paper.Group | undefined;
     private mine : paper.Group | undefined;
+=======
+​
+    // TypeScript will throw an error if you define a type but don't initialize in the constructor
+    // This can be prevented by including undefined as a second possible type
+    private ship : paper.Group | undefined;
+​
+    private sStar! : paper.Path.Circle;
+    private lStar! : paper.Path.Circle;
+    private smallStar! : paper.SymbolDefinition;
+    private largeStar! : paper.SymbolDefinition;
+    private mouseVector! : paper.Point;
+    private starGroup! : paper.Item;
+>>>>>>> aa985bb0ba9c97b2c8b7839edade5aebf7eeb0ec
     
     constructor()
     {
@@ -129,24 +148,25 @@ class Game
         this.pointGame.content = this.score.toString();
 
     }
-
+​
     start() : void 
     {
         this.createScene();
         this.resize();
-
+​
         // This registers the event handlers for window and mouse events
         paper.view.onResize = () => {this.resize();};
         paper.view.onMouseMove = (event: paper.MouseEvent) => {this.onMouseMove(event);};
         paper.view.onMouseDown = (event: paper.MouseEvent) => {this.onMouseDown(event);};
         paper.view.onFrame = (event: GameEvent) => {this.update(event);};
-
+​
     }
-
+​
     private createScene() : void 
     {
         // Create a new group to hold the ship graphic
         this.ship = new paper.Group();
+<<<<<<< HEAD
         this.mine = new paper.Group();
         
 
@@ -155,6 +175,13 @@ class Game
         this.ship.applyMatrix = false;
         
 
+=======
+​
+        // This line prevents the transformation matrix from being baked directly into its children
+        // Instead, will be applied every frame
+        this.ship.applyMatrix = false;
+​
+>>>>>>> aa985bb0ba9c97b2c8b7839edade5aebf7eeb0ec
         // This code block loads an SVG file asynchronously
         // It uses an arrow function to specify the code that gets executed after the file is loaded
         // We will go over this syntax in class
@@ -165,6 +192,7 @@ class Game
             this.ship!.position.x = this.width / 2;
             this.ship!.position.y = this.height / 2;
         });
+<<<<<<< HEAD
 
         paper.project.importSVG('./assets/mine.svg', (item: paper.Item) => {
             item.addTo(this.mine!);
@@ -226,11 +254,47 @@ class Game
         dotSymbol.place(new paper.Point(1200,25));
         dotSymbol.place(new paper.Point(0,775));
         dotSymbol.place(new paper.Point(0,25));
+=======
+​
+        // Add more code here
+        //Used to initialize star
+        
+​
+        /* this.lStar = new paper.Path.Circle(new paper.Point(300,400), 3);
+        this.lStar.strokeColor = new paper.Color("white");
+        this.lStar.fillColor = new paper.Color("white"); */
+​
+        //Uses symbols to create instances of smaller stars throughout the canvas
+        this.starGroup = new paper.Group();
+        for(var i = 0 ; i < 120 ; i++){
+            this.sStar = new paper.Path.Circle(new paper.Point(300,400), Math.random()*3);
+            this.sStar.strokeColor = new paper.Color("white");
+            this.sStar.fillColor = new paper.Color("white");
+​
+            this.smallStar = new paper.SymbolDefinition(this.sStar);
+            this.starGroup.addChild(this.sStar);
+​
+            var maxPoint = new Point(1200,800);
+            var randomPoint = Point.random();
+​
+            this.smallStar.place(maxPoint.multiply(randomPoint));
+        }
+        
+        /* this.largeStar = new paper.SymbolDefinition(this.lStar);
+        for(var i = 0 ; i < 120 ; i++){
+            var maxPoint = new Point(1200,800);
+            var randomPoint = Point.random();
+            this.largeStar.place(maxPoint.multiply(randomPoint));
+        } */
+​
+​
+>>>>>>> aa985bb0ba9c97b2c8b7839edade5aebf7eeb0ec
     }
-
+​
     // This method will be called once per frame
     private update(event: GameEvent) : void
     {
+<<<<<<< HEAD
         if(!this.gameOver){
             this.pointGame.content = this.score.toString();
             this.ship!.visible = true;
@@ -468,8 +532,45 @@ class Game
             this.explosions = [];
             this.score = 0;
         }
+=======
+        //Add code here
+        if(this.smallStar){
+            //used to reset x position for stars
+            this.smallStar.item.translate(this.mouseVector);
+            if(this.smallStar.item.position.x > 1200){
+                this.smallStar.item.position.x = 0;
+            }else if(this.smallStar.item.position.x < 0){
+                this.smallStar.item.position.x = 1200;
+            }
+    
+            //used to reset y position for stars 
+            if(this.smallStar.item.position.y > 800){
+                this.smallStar.item.position.y = 0;
+            }else if(this.smallStar.item.position.y < 0){
+                this.smallStar.item.position.y = 800;
+            }
+        }
+​
+        /* if(this.largeStar){
+            //used to reset x position for stars
+            this.largeStar.item.translate(this.mouseVector);
+            if(this.largeStar.item.position.x > 1200){
+                this.largeStar.item.position.x = 0;
+            }else if(this.largeStar.item.position.x < 0){
+                this.largeStar.item.position.x = 1200;
+            }
+    
+            //used to reset y position for stars
+            if(this.largeStar.item.position.y > 800){
+                this.largeStar.item.position.y = 0;
+            }else if(this.smallStar.item.position.y < 0){
+                this.largeStar.item.position.y = 800;
+            }
+        } */
+​
+>>>>>>> aa985bb0ba9c97b2c8b7839edade5aebf7eeb0ec
     }
-
+​
     // This handles dynamic resizing of the browser window
     // You do not need to modify this function
     private resize() : void
@@ -484,10 +585,11 @@ class Game
         paper.view.center = new paper.Point(this.width / 2, this.height / 2);
         
     }
-
+​
     private onMouseMove(event: paper.MouseEvent) : void
     {
         // Get the vector from the center of the screen to the mouse position
+<<<<<<< HEAD
         var mouseVector = event.point.subtract(paper.view.center);
         // console.log(mouseVector);
 
@@ -497,11 +599,15 @@ class Game
 
 
 
+=======
+        this.mouseVector = event.point.subtract(paper.view.center);
+​
+>>>>>>> aa985bb0ba9c97b2c8b7839edade5aebf7eeb0ec
         // Point the ship towards the mouse cursor by converting the vector to an angle
         // This only works if applyMatrix is set to false
-        this.ship!.rotation = mouseVector.angle + 90;
+        this.ship!.rotation = this.mouseVector.angle + 270; //was + 90
     }
-
+​
     private onMouseDown(event: paper.MouseEvent) : void
     {
         console.log("Mouse click!");
@@ -515,7 +621,7 @@ class Game
         }
     } 
 }
-
+​
 // This is included because the paper is missing a TypeScript definition
 // You do not need to modify it
 class GameEvent
@@ -523,7 +629,7 @@ class GameEvent
     readonly delta: number;
     readonly time: number;
     readonly count: number;
-
+​
     constructor()
     {
         this.delta = 0;
