@@ -5,6 +5,7 @@
  */ 
 
 import * as paper from 'paper';
+import {random, randomInt} from 'mathjs';
 
 class Game 
 {
@@ -12,16 +13,81 @@ class Game
     // This is different than screen coordinates!
     private width : number;
     private height : number;
+    private bigStarNode : paper.Group;
+    private medStarNode : paper.Group;
+    private smallStarNode : paper.Group;
+    private velocity : paper.Point | undefined;
+    private secCounter : number;
+    private mineSymbols : paper.SymbolItem[];
+    private score : number;
+    private gameOver : boolean;
+
+
+    private explosionNode : paper.Group | undefined;
+    private explosions : paper.SymbolItem[];
+
+    private laserNode : paper.Group;
+    private laserSymbols : paper.SymbolItem[];
+    private laserVelocities : paper.Point[];
 
     // TypeScript will throw an error if you define a type but don't initialize in the constructor
     // This can be prevented by including undefined as a second possible type
     private ship : paper.Group | undefined;
+    private mine : paper.Group | undefined;
+    // private star : paper.Path.Star;  //background
+    // private dot  : paper.Path.Circle; //background
     
     constructor()
     {
         paper.setup('canvas');
         this.width = 1200;
         this.height = 800;
+        this.secCounter = 0;
+        this.score = 0;
+        this.gameOver = false;
+
+        this.bigStarNode = new paper.Group();
+        this.medStarNode = new paper.Group();
+        this.smallStarNode = new paper.Group();
+
+
+        this.mineSymbols = [];
+        this.explosionNode = new paper.Group();
+        this.explosions = [];
+
+        this.laserVelocities = []
+
+        this.laserNode = new paper.Group();
+        this.laserSymbols = [];
+
+        var laser = new paper.Path.Line(new paper.Point(400,-100), new paper.Point(420,-100));
+
+        //var laser = new paper.Path.Rectangle(new paper.Rectangle(new paper.Point(400,400), new paper.Size(40, 2)));
+        //laser.fillColor = new paper.Color('red');
+        laser.strokeColor = new paper.Color('red');
+        laser.strokeWidth = 2;
+
+        var explosion = new paper.Path.Star(new paper.Point(600,200), 10, 10, 25);
+        var innerExplosion = new paper.Path.Star(new paper.Point(600,200), 10, 2*3, 5*3);
+        explosion.fillColor = new paper.Color('red');
+        innerExplosion.fillColor = new paper.Color('yellow');
+
+        this.explosionNode.addChild(explosion);
+        this.explosionNode.addChild(innerExplosion);
+
+        this.laserNode.addChild(laser);
+
+        // this.velocity = new paper.Point(0,0);
+
+        // this.star = new paper.Path.Star(new paper.Point(100,100), 5, 4, 10);
+        // this.star.strokeWidth = 2;
+        // this.star.fillColor = new paper.Color('gold');
+        // // this.star.opacity = .5;
+        // this.star.visible = false;
+
+        // this.dot = new paper.Path.Circle(new paper.Point(this.width/2, this.height/2), 2);
+        // this.dot.fillColor = new paper.Color('white');
+        // this.dot.visible = false;
     }
 
     start() : void 
@@ -41,10 +107,13 @@ class Game
     {
         // Create a new group to hold the ship graphic
         this.ship = new paper.Group();
+        this.mine = new paper.Group();
+        
 
         // This line prevents the transformation matrix from being baked directly into its children
         // Instead, will be applied every frame
         this.ship.applyMatrix = false;
+        
 
         // This code block loads an SVG file asynchronously
         // It uses an arrow function to specify the code that gets executed after the file is loaded
@@ -57,13 +126,280 @@ class Game
             this.ship!.position.y = this.height / 2;
         });
 
+        paper.project.importSVG('./assets/mine.svg', (item: paper.Item) => {
+            item.addTo(this.mine!);
+            this.mine!.scale(3);
+            this.mine!.position = new paper.Point(400,400);
+            // this.mine!.visible = false;      
+        });
+        
+
         // Add more code here
+        var bigStar = new paper.Path.Star(new paper.Point(200,200), 5, 4, 10);
+        bigStar.strokeWidth = 2;
+        bigStar.fillColor = new paper.Color('gold');
+        bigStar.opacity = .5;
+
+        var medStar = new paper.Path.Star(new paper.Point(800, 300), 5, 2, 5);
+        medStar.fillColor = new paper.Color('red');
+        medStar.opacity = .5;
+        
+
+
+        var dot = new paper.Path.Circle(new paper.Point(500, 300), 1);
+        dot.fillColor = new paper.Color('white');
+
+        this.velocity = new paper.Point(0,0);
+        
+       
+
+        var bigStarSymbol = new paper.SymbolDefinition(bigStar);
+        var medStarSymbol = new paper.SymbolDefinition(medStar);
+        var dotSymbol = new paper.SymbolDefinition(dot);
+
+        var bigStarSymbols : paper.SymbolItem[] = [];
+        var medStarSymbols : paper.SymbolItem[] = [];
+        var smallStarSymbols : paper.SymbolItem[] = [];
+        // var mineSymbols : paper.SymbolItem[] = [];
+
+        // explosionSymbol.place(new paper.Point(0, 100));
+
+        for (let i = 0; i < 25;i++){
+            //10 big
+            //15 med
+            //25 small
+            if (i<10){
+                //add big
+                bigStarSymbols.push(bigStarSymbol.place(new paper.Point(random(1200), random(800))));
+                bigStarSymbols[i].addTo(this.bigStarNode);
+            }
+            if (i<15){
+                //add med
+                medStarSymbols.push(medStarSymbol.place(new paper.Point(random(1200) , random(800))));
+                medStarSymbols[i].addTo(this.medStarNode);
+            }
+            //add small
+
+            smallStarSymbols.push(dotSymbol.place(new paper.Point(random(1200), random(800))));
+            smallStarSymbols[i].addTo(this.smallStarNode);
+        }
+
+        //four corners
+        dotSymbol.place(new paper.Point(1200,775));
+        dotSymbol.place(new paper.Point(1200,25));
+        dotSymbol.place(new paper.Point(0,775));
+        dotSymbol.place(new paper.Point(0,25));
     }
 
     // This method will be called once per frame
     private update(event: GameEvent) : void
     {
         // Add code here
+        var mineSymbol = new paper.SymbolDefinition(this.mine!);
+        var explosionsymbol = new paper.SymbolDefinition(this.explosionNode!);
+
+        //do laser movement
+        for(var i = 0; i<this.laserSymbols.length; i++){
+
+            //remove if laser is out of the window
+            if(this.laserSymbols[i].position.x>1450 || this.laserSymbols[i].position.x<-150 || this.laserSymbols[i].position.y>950 || this.laserSymbols[i].position.y<-150){
+                this.laserSymbols[i].visible = false;
+                console.log("it should disappear");
+                this.laserSymbols.splice(i,1);
+                this.laserVelocities.splice(i,1);
+                break;      
+            }
+
+            this.laserSymbols[i].translate(this.laserVelocities[i].multiply(20));
+            this.laserSymbols[i].translate(this.velocity!.multiply(-event.delta).multiply(1.1))
+        }
+
+        //expand explosions and remove if they get too big
+        for(var i = 0; i<this.explosions.length; i++){
+            // console.log(this.explosions.length);
+            this.explosions[i].scaling.length += 0.4;
+            this.explosions[i].translate(this.velocity!.multiply(-event.delta).multiply(1.1));
+
+            if(this.explosions[i].scaling.length > 4){
+                //remove the explosion from the screen and the arrya
+                this.explosions[i].visible = false;
+                this.explosions.splice(i,1);
+            }
+        }
+
+ 
+        //add mine every 0.5 seconds
+        if(event.time > this.secCounter + 0.5){   
+            var location = randomInt(4);
+            this.secCounter = event.time;
+            // console.log(this.secCounter);
+
+            if(location == 0){
+                //add to top of screen
+                this.mineSymbols.push(mineSymbol.place(new paper.Point(random(1200),-10)));
+                console.log("top of screen");
+            }else if(location ==1 ){
+                //add to right of screen
+                this.mineSymbols.push(mineSymbol.place(new paper.Point(1220,random(800))));
+                console.log("right of screen");
+
+            }else if(location == 2){
+                //add to bottom of screen
+                this.mineSymbols.push(mineSymbol.place(new paper.Point(random(1200),810)));
+                console.log("bottom of screen");
+
+            }else if(location == 3){
+                //add to left of screen
+                this.mineSymbols.push(mineSymbol.place(new paper.Point(-20,random(800))));
+                console.log("left of screen");
+
+            }
+            console.log(this.mineSymbols.length);
+            if(this.mineSymbols.length > 25){
+                //remove the first mine in the array
+                // delete this.mineSymbols[0];
+                this.mineSymbols[0].visible = false;
+                // this.mineSymbols = this.mineSymbols.splice(1,25);
+                this.mineSymbols.splice(0,1);
+                console.log("deleted mine");
+            }
+
+
+            
+        }
+
+        //move stars based on mouse movement
+        this.bigStarNode.translate(this.velocity!.multiply(-event.delta));
+        this.medStarNode.translate(this.velocity!.multiply(-event.delta).multiply(0.25));
+        this.smallStarNode.translate(this.velocity!.multiply(-event.delta).multiply(0.1));
+
+        //mvoe mines towards ship, 
+        for(var i = 0; i<this.mineSymbols.length; i++){
+            this.mineSymbols[i].translate((this.mineSymbols[i].position.subtract(this.ship!.position)).divide(-this.mineSymbols[i].position.subtract(this.ship!.position).length));
+            this.mineSymbols[i].rotate(1);
+            this.mineSymbols[i].translate(this.velocity!.multiply(-event.delta).multiply(1.1));
+        }
+
+        //destray mines if they get too close to each other
+        for(var i = 0 ; i<(this.mineSymbols.length-1) ; i++){
+            for (var t = 0; t<this.laserSymbols.length; t++){
+                if(i == this.mineSymbols.length-2){
+                    var distance = this.laserSymbols[t].position.subtract(this.mineSymbols[i+1].position).length;
+                    if(distance < 30){
+                        this.score++;
+                        this.mineSymbols[i+1].visible = false;
+
+                        // create explosion
+                        this.explosions.push(explosionsymbol.place(this.mineSymbols[i+1].position));
+                        this.explosions[this.explosions.length-1].applyMatrix = false;
+                        this.explosions[this.explosions.length-1].scaling.length = 1;
+
+                        this.laserSymbols[t].visible = false;
+                        this.laserSymbols.splice(t,1);
+                        this.laserVelocities.splice(t,1);
+
+                        this.mineSymbols.splice(i+1, 1);
+                        break;
+                    }
+
+                }
+                this.score++;
+                var distance = this.laserSymbols[t].position.subtract(this.mineSymbols[i].position).length;
+                if(distance < 30){
+                    this.mineSymbols[i].visible = false;
+
+                    // create explosion
+                    this.explosions.push(explosionsymbol.place(this.mineSymbols[i].position));
+                    this.explosions[this.explosions.length-1].applyMatrix = false;
+                    this.explosions[this.explosions.length-1].scaling.length = 1;
+
+                    this.laserSymbols[t].visible = false;
+                    this.laserSymbols.splice(t,1);
+                    this.laserVelocities.splice(t,1);
+
+                    this.mineSymbols.splice(i, 1);
+                    break;
+                }
+
+            }
+            console.log(this.score);
+            for(var j = i+1; j<this.mineSymbols.length; j++){
+                var distance = this.mineSymbols[i].position.subtract(this.mineSymbols[j].position).length;
+                if(distance < 0){
+                    distance = -distance;
+                }
+                if(distance < 44){
+                    //remove the mines
+                    this.mineSymbols[i].visible = false;
+                    this.mineSymbols[j].visible = false;
+                    // create explosion
+                    this.explosions.push(explosionsymbol.place(this.mineSymbols[i].position));
+                    this.explosions[this.explosions.length-1].applyMatrix = false;
+                    this.explosions[this.explosions.length-1].scaling.length = 1;
+                    this.explosions.push(explosionsymbol.place(this.mineSymbols[j].position));
+                    this.explosions[this.explosions.length-1].applyMatrix = false;
+                    this.explosions[this.explosions.length-1].scaling.length = 1;
+
+                    this.mineSymbols.splice(j, 1);
+                    this.mineSymbols.splice(i, 1);
+                    break;
+                }
+            }
+        }
+
+        //game over if a mine hits the ship
+
+        //expand any explosions and remove them once they get too big
+
+
+        
+        //make stars pull a pac-man if they go off screen
+        for(var i = 0; i<25; i++){
+            if(i<10){
+                if (this.bigStarNode.children[i].position.x<0){
+                    this.bigStarNode.children[i].position.x = 1220;
+                }
+                if (this.bigStarNode.children[i].position.x>1220){
+                    this.bigStarNode.children[i].position.x = 0;
+                }
+                if (this.bigStarNode.children[i].position.y<0){
+                    this.bigStarNode.children[i].position.y = 800;
+                }
+                if (this.bigStarNode.children[i].position.y>800){
+                    this.bigStarNode.children[i].position.y = 0;
+                }
+
+            }
+            if(i<15){
+                //test
+                if (this.medStarNode.children[i].position.x<0){
+                    this.medStarNode.children[i].position.x = 1220;
+                }
+                if (this.medStarNode.children[i].position.x>1220){
+                    this.medStarNode.children[i].position.x = 0;
+                }
+                if (this.medStarNode.children[i].position.y<0){
+                    this.medStarNode.children[i].position.y = 800;
+                }
+                if (this.medStarNode.children[i].position.y>800){
+                    this.medStarNode.children[i].position.y = 0;
+                }
+            }
+
+            if (this.smallStarNode.children[i].position.x<0){
+                this.smallStarNode.children[i].position.x = 1220;
+            }
+            if (this.smallStarNode.children[i].position.x>1220){
+                this.smallStarNode.children[i].position.x = 0;
+            }
+            if (this.smallStarNode.children[i].position.y<0){
+                this.smallStarNode.children[i].position.y = 800;
+            }
+            if (this.smallStarNode.children[i].position.y>800){
+                this.smallStarNode.children[i].position.y = 0;
+            }
+            
+        }
     }
 
     // This handles dynamic resizing of the browser window
@@ -85,6 +421,13 @@ class Game
     {
         // Get the vector from the center of the screen to the mouse position
         var mouseVector = event.point.subtract(paper.view.center);
+        // console.log(mouseVector);
+
+        // this.velocity = mouseVector.subtract(this.ship!.position);
+        this.velocity = mouseVector;
+        // console.log(this.velocity);
+
+
 
         // Point the ship towards the mouse cursor by converting the vector to an angle
         // This only works if applyMatrix is set to false
@@ -94,6 +437,10 @@ class Game
     private onMouseDown(event: paper.MouseEvent) : void
     {
         console.log("Mouse click!");
+        var laserSymbol = new paper.SymbolDefinition(this.laserNode);
+        this.laserSymbols.push(laserSymbol.place(this.ship!.position));
+        this.laserSymbols[this.laserSymbols.length-1].rotation = this.velocity!.angle;
+        this.laserVelocities.push(new paper.Point(this.velocity!).divide(this.velocity!.length));
     } 
 }
 
