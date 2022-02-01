@@ -185,7 +185,6 @@ class Game
         medStar.opacity = .5;
         
 
-
         var dot = new paper.Path.Circle(new paper.Point(500, 300), 1);
         dot.fillColor = new paper.Color('white');
 
