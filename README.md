@@ -21,7 +21,7 @@ Name: Ben Moorlach
 
 Third Party Assets:
 
-Wizard Bonus Functionality:
+Wizard Bonus Functionality: Point System/Game Over Screen if a mine gets too close to the ship
 
 ## Prerequisites
 
